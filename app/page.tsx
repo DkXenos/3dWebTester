@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, Suspense, lazy } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import StarField from './components/StarField';
 
@@ -146,50 +145,6 @@ export default function Home() {
           ))}
         </motion.div>
 
-        {/* CTA buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 1.25 }}
-          style={{ display: 'flex', gap: 12, marginTop: 36, pointerEvents: 'auto' }}
-        >
-          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-            <motion.div
-              whileHover={{ scale: 1.05, boxShadow: '0 0 32px rgba(245,166,35,0.4), inset 0 1px 0 rgba(245,166,35,0.25)' }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 18 }}
-              style={{
-                padding: '12px 30px',
-                background: 'linear-gradient(135deg, rgba(245,166,35,0.22) 0%, rgba(245,166,35,0.1) 100%)',
-                border: '1px solid rgba(245,166,35,0.45)',
-                borderRadius: 99, color: '#F5A623',
-                fontSize: '0.88rem', fontWeight: 700,
-                letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                cursor: 'pointer', backdropFilter: 'blur(10px)',
-                boxShadow: '0 0 18px rgba(245,166,35,0.12), inset 0 1px 0 rgba(245,166,35,0.12)',
-              }}
-            >
-              Open Dashboard →
-            </motion.div>
-          </Link>
-
-          <motion.div
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 20 }}
-            style={{
-              padding: '12px 26px',
-              background: 'rgba(245,237,214,0.05)',
-              border: '1px solid rgba(245,237,214,0.12)',
-              borderRadius: 99, color: 'rgba(245,237,214,0.6)',
-              fontSize: '0.88rem', fontWeight: 600,
-              letterSpacing: '0.04em', cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            Explore Features
-          </motion.div>
-        </motion.div>
       </div>
 
       {/* Scroll hint */}
