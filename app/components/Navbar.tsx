@@ -40,7 +40,7 @@ export default function Navbar() {
         position: 'fixed',
         top: 18,
         left: '50%',
-        transform: 'translateX(-50%)',
+        x: '-50%',
         zIndex: 9000,
       }}
     >
