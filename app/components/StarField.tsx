@@ -1,17 +1,26 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const stars = Array.from({ length: 80 }).map((_, i) => ({
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 1.5 + 0.5,
-  delay: Math.random() * 4,
-  duration: Math.random() * 3 + 2,
-  amber: i % 5 === 0,
-}));
+type Star = { x: number; y: number; size: number; delay: number; duration: number; amber: boolean };
 
 export default function StarField() {
+  const [stars, setStars] = useState<Star[]>([]);
+
+  useEffect(() => {
+    setStars(
+      Array.from({ length: 80 }).map((_, i) => ({
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 1.5 + 0.5,
+        delay: Math.random() * 4,
+        duration: Math.random() * 3 + 2,
+        amber: i % 5 === 0,
+      }))
+    );
+  }, []);
+
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
       {stars.map((s, i) => (
