@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import HeroSection from './components/HeroSection';
 import DashboardSection from './components/DashboardSection';
+
+const OpeningScreen = lazy(() => import('./components/OpeningScreen'));
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -10,6 +12,7 @@ export default function Home() {
   const [dashboardVisible, setDashboardVisible] = useState(false);
   const [heroOpacity, setHeroOpacity] = useState(1);
   const [mounted, setMounted] = useState(false);
+  const [showOpening, setShowOpening] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -30,18 +33,27 @@ export default function Home() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ background: 'var(--background)' }}>
-      <HeroSection
-        heroOpacity={heroOpacity}
-        scrollProgress={scrollProgress}
-        dashboardVisible={dashboardVisible}
-        mounted={mounted}
-      />
+    <>
+      {mounted && (
+        <Suspense fallback={null}>
+          {showOpening && (
+            <OpeningScreen onComplete={() => setShowOpening(false)} />
+          )}
+        </Suspense>
+      )}
+      <div ref={containerRef} style={{ background: 'var(--background)' }}>
+        <HeroSection
+          heroOpacity={heroOpacity}
+          scrollProgress={scrollProgress}
+          dashboardVisible={dashboardVisible}
+          mounted={mounted}
+        />
 
-      {/* ═══ SCROLL SPACER ═══ */}
-      <div style={{ height: '80vh' }} />
+        {/* ═══ SCROLL SPACER ═══ */}
+        <div style={{ height: '80vh' }} />
 
-      <DashboardSection visible={dashboardVisible} />
-    </div>
+        <DashboardSection visible={dashboardVisible} />
+      </div>
+    </>
   );
 }
