@@ -2,17 +2,17 @@
 
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { Suspense, useEffect } from 'react';
 import * as THREE from 'three';
-import { useEffect } from 'react';
 import Scene from './Scene';
 
-// Force the Three.js scene background to pure black so there's no grey/white
-// default clear colour before the EXR finishes loading.
-function SceneBackground() {
+// Sets scene background + gl clear colour to black so there's never a white frame
+function BlackBackground() {
   const { scene, gl } = useThree();
   useEffect(() => {
-    scene.background = new THREE.Color(0x000000);
-    gl.setClearColor(0x000000, 1);
+    gl.setClearColor(new THREE.Color('#000000'), 1);
+    // scene.background will be overwritten by <Environment background> once loaded
+    scene.background = new THREE.Color('#000000');
   }, [scene, gl]);
   return null;
 }
@@ -24,39 +24,44 @@ export default function BedroomScene() {
         position: 'fixed',
         inset: 0,
         zIndex: 0,
-        width: '100vw',
-        height: '100vh',
         background: '#000000',
       }}
     >
       <Canvas
-        shadows
+        shadows="soft"
         gl={{
           antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.55,
+          toneMappingExposure: 0.8,
           outputColorSpace: THREE.SRGBColorSpace,
         }}
-        camera={{ fov: 100, near: 0.05, far: 50, position: [0, 1.4, 2.5] }}
-        style={{ background: '#000000' }}
+        // Camera positioned slightly inside the room, angled slightly
+        // toward the windowed wall so the EXR is immediately visible
+        camera={{
+          fov: 75,
+          near: 0.05,
+          far: 100,
+          position: [0, 1.5, 3],
+        }}
       >
-        {/* Force black clear colour before EXR loads */}
-        <SceneBackground />
+        <BlackBackground />
 
-        <Scene />
+        <Suspense fallback={null}>
+          <Scene />
+        </Suspense>
 
-        {/* Look-around controls — camera orbits around the room interior */}
         <OrbitControls
           makeDefault
-          enableZoom={false}
+          enableZoom={true}
           enablePan={false}
-          rotateSpeed={0.25}
-          minPolarAngle={Math.PI / 3.5}
-          maxPolarAngle={Math.PI / 1.8}
-          minAzimuthAngle={-Math.PI / 2.5}
-          maxAzimuthAngle={Math.PI / 2.5}
-          target={[0, 1.2, -1]}
+          rotateSpeed={0.3}
+          zoomSpeed={0.5}
+          minDistance={0.5}
+          maxDistance={6}
+          minPolarAngle={Math.PI / 6}
+          maxPolarAngle={Math.PI / 1.6}
+          target={[0, 1.0, 0]}
         />
       </Canvas>
     </div>
