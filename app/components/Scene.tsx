@@ -27,9 +27,8 @@ function ClassroomModel() {
 
 // ─── Ceiling plane ───────────────────────────────────────────────────────────
 // Sits at the top of the room walls and subtly reflects EXR city lights.
-// Adjust `ceilingY` to match your room's actual ceiling height.
 const CEILING_Y = 3.2;
-const CEILING_SIZE = 14; // wide enough to cover the classroom footprint
+const CEILING_SIZE = 14;
 
 function Ceiling() {
   return (
@@ -54,41 +53,36 @@ export default function Scene() {
   return (
     <>
       {/*
-        These lights live OUTSIDE Suspense so they're always active — even
-        while the EXR / GLB are still streaming in. Without this you get a
-        completely dark scene until the assets finish loading.
+        Very low ambient so true blacks don't get too dark.
+        Lives OUTSIDE Suspense so it's always active while EXR/GLB stream in.
       */}
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[3, 5, 2]} intensity={1.2} color="#fff8ee" />
-      <pointLight position={[-3, 3, -2]} intensity={1.5} color="#c8dfff" />
+      <ambientLight intensity={0.2} />
 
       {/*
         Suspense boundary: model + EXR load in the background.
-        The lights above keep things visible in the meantime.
       */}
       <Suspense fallback={null}>
         {/*
-          EXR environment.
-          - background={false}: we're INSIDE the room so the skybox is
-            always hidden by the walls anyway — no point rendering it.
-          - The EXR still works as full IBL (Image Based Lighting) which
-            gives the materials realistic reflections and colour grading.
-          - backgroundBlurriness only matters if you ever switch to background=true.
+          EXR environment with background enabled.
+          - background={true}: renders the blurred EXR as the scene skybox.
+          - blur={0.5}: hides 1k pixelation for a cinematic "bokeh city" look.
+          - Still provides full IBL for realistic reflections & colour grading.
         */}
         <Environment
           files="/asset/exr/mainbg.exr"
-          background={false}
-          backgroundBlurriness={0.5}
+          background
+          blur={0.5}
+          environmentIntensity={0.4}
         />
 
         {/* Room model */}
         <ClassroomModel />
 
-        {/* Reflective ceiling */}
+        {/* Reflective ceiling — subtly catches city lights from the EXR */}
         <Ceiling />
 
         {/*
-          Soft baked-style floor shadows.
+          Soft baked-style floor shadows — no castShadow on lights needed.
           Adjust position y to sit exactly on the floor of your model.
         */}
         <ContactShadows
