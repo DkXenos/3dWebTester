@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import GlassSurface from '../../components/GlassSurface';
 import GamifiedHUD from './GamifiedHUD';
 import AICompanionPortal from './AICompanionPortal';
 import PomodoroTimer from './PomodoroTimer';
@@ -112,16 +113,16 @@ export default function Dashboard({ visible }: DashboardProps) {
           {/* Focus Note Area */}
           <motion.div
             variants={widgetVariants}
-            className="glass-card"
-            style={{
-              flex: 1,
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-              ...blurStyle(studyMode),
-            }}
+            style={{ flex: 1, ...blurStyle(studyMode) }}
           >
+          <GlassSurface width="100%" height="100%" borderRadius={16}>
+          <div style={{
+            width: '100%', height: '100%',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)' }}>
                 📓 Catatan Cepat
@@ -148,17 +149,17 @@ export default function Dashboard({ visible }: DashboardProps) {
               onFocus={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.4)'; }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.15)'; }}
             />
+          </div>
+          </GlassSurface>
           </motion.div>
 
           {/* Daily Goals */}
           <motion.div
             variants={widgetVariants}
-            className="glass-card"
-            style={{
-              padding: '18px 20px',
-              ...blurStyle(studyMode),
-            }}
+            style={{ ...blurStyle(studyMode) }}
           >
+          <GlassSurface width="100%" borderRadius={16}>
+          <div style={{ width: '100%', padding: '18px 20px' }}>
             <h3 style={{
               fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.9rem',
               color: 'var(--cream)', marginBottom: 12,
@@ -166,6 +167,8 @@ export default function Dashboard({ visible }: DashboardProps) {
               ✅ Target Harian
             </h3>
             <DailyGoals />
+          </div>
+          </GlassSurface>
           </motion.div>
         </div>
       </motion.div>
