@@ -438,8 +438,7 @@ export default function MonitorScene({
 
   return (
     <>
-
-      {/* ── Warm Ambient Lighting (significantly boosted) ── */}
+      {/* ── Warm Ambient Lighting ── */}
       <ambientLight intensity={0.8} color="#FFD27D" />
 
       {/* Key light — warm overhead from left */}
@@ -474,9 +473,8 @@ export default function MonitorScene({
       <hemisphereLight
         color="#FFD27D"
         groundColor="#3D2B14"
-        intensity={0.6}
+        intensity={0.5}
       />
-
       {/* Contact shadows on ground */}
       <Suspense fallback={null}>
         <ContactShadows
