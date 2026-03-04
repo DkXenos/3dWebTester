@@ -423,15 +423,15 @@ function CameraRig({ scrollProgress }: { scrollProgress: React.RefObject<number>
 }
 /* ── Room (subtle walls + dark windows) ── */
 function Room() {
-  const wallColor = '#0D0906';
-  const wallRoughness = 0.95;
+  const wallColor = '#1C150E';
+  const wallRoughness = 0.92;
 
   return (
     <group>
       {/* ── Floor ── */}
       <mesh position={[0, -2.15, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[14, 14]} />
-        <meshStandardMaterial color="#0A0705" roughness={0.95} metalness={0.0} />
+        <meshStandardMaterial color="#0F0B07" roughness={0.92} metalness={0.0} />
       </mesh>
 
       {/* ── Back wall ── */}
@@ -452,11 +452,56 @@ function Room() {
         <meshStandardMaterial color={wallColor} roughness={wallRoughness} />
       </mesh>
 
-      {/* ── Ceiling (very subtle) ── */}
+      {/* ── Ceiling ── */}
       <mesh position={[0, 5.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[14, 14]} />
-        <meshStandardMaterial color="#080503" roughness={0.98} />
+        <meshStandardMaterial color="#0F0B07" roughness={0.95} />
       </mesh>
+
+      {/* ── Wall-wash lights (make walls visible) ── */}
+
+      {/* Back wall wash — strong warm uplight behind monitor */}
+      <spotLight
+        position={[0, -1.0, -3.5]}
+        target-position={[0, 3, -4.5]}
+        intensity={8}
+        color="#F5A623"
+        angle={1.0}
+        penumbra={0.9}
+        distance={8}
+        decay={2}
+      />
+
+      {/* Back wall fill — wider warm wash */}
+      <pointLight position={[0, 3, -3.5]} intensity={3} color="#FFD27D" distance={6} decay={2} />
+
+      {/* Left wall sconce */}
+      <pointLight position={[-5.5, 2.5, -1]} intensity={2} color="#F5A623" distance={6} decay={2} />
+
+      {/* Right wall sconce */}
+      <pointLight position={[5.5, 2.5, -1]} intensity={2} color="#F5A623" distance={6} decay={2} />
+
+      {/* Ceiling warm spots */}
+      <spotLight
+        position={[-3, 4.8, -2]}
+        target-position={[-3, 0, -2]}
+        intensity={3}
+        color="#FFD27D"
+        angle={0.6}
+        penumbra={0.8}
+        distance={8}
+        decay={2}
+      />
+      <spotLight
+        position={[3, 4.8, -2]}
+        target-position={[3, 0, -2]}
+        intensity={3}
+        color="#FFD27D"
+        angle={0.6}
+        penumbra={0.8}
+        distance={8}
+        decay={2}
+      />
 
       {/* ── Windows on back wall (dark reflective like turned-off monitors) ── */}
       {/* Left window */}
