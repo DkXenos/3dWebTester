@@ -421,6 +421,136 @@ function CameraRig({ scrollProgress }: { scrollProgress: React.RefObject<number>
 
   return null;
 }
+/* ── Room (subtle walls + dark windows) ── */
+function Room() {
+  const wallColor = '#0D0906';
+  const wallRoughness = 0.95;
+
+  return (
+    <group>
+      {/* ── Floor ── */}
+      <mesh position={[0, -2.15, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[14, 14]} />
+        <meshStandardMaterial color="#0A0705" roughness={0.95} metalness={0.0} />
+      </mesh>
+
+      {/* ── Back wall ── */}
+      <mesh position={[0, 1.5, -4.5]} receiveShadow>
+        <planeGeometry args={[14, 8]} />
+        <meshStandardMaterial color={wallColor} roughness={wallRoughness} />
+      </mesh>
+
+      {/* ── Left wall ── */}
+      <mesh position={[-7, 1.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[14, 8]} />
+        <meshStandardMaterial color={wallColor} roughness={wallRoughness} />
+      </mesh>
+
+      {/* ── Right wall ── */}
+      <mesh position={[7, 1.5, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <planeGeometry args={[14, 8]} />
+        <meshStandardMaterial color={wallColor} roughness={wallRoughness} />
+      </mesh>
+
+      {/* ── Ceiling (very subtle) ── */}
+      <mesh position={[0, 5.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[14, 14]} />
+        <meshStandardMaterial color="#080503" roughness={0.98} />
+      </mesh>
+
+      {/* ── Windows on back wall (dark reflective like turned-off monitors) ── */}
+      {/* Left window */}
+      <group position={[-2.8, 2.0, -4.45]}>
+        {/* Window frame */}
+        <mesh>
+          <boxGeometry args={[2.0, 2.5, 0.06]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Glass — dark reflective surface */}
+        <mesh position={[0, 0, 0.035]}>
+          <planeGeometry args={[1.7, 2.15]} />
+          <meshStandardMaterial
+            color="#030303"
+            roughness={0.05}
+            metalness={0.9}
+            envMapIntensity={0.4}
+          />
+        </mesh>
+        {/* Subtle frame inner edge highlight */}
+        <mesh position={[0, 0, 0.032]}>
+          <boxGeometry args={[1.8, 2.25, 0.003]} />
+          <meshStandardMaterial
+            color="#F5A623"
+            emissive="#F5A623"
+            emissiveIntensity={0.03}
+            transparent
+            opacity={0.15}
+          />
+        </mesh>
+        {/* Horizontal divider */}
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[1.8, 0.04, 0.02]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Vertical divider */}
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[0.04, 2.3, 0.02]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Window sill */}
+        <mesh position={[0, -1.3, 0.12]}>
+          <boxGeometry args={[2.2, 0.06, 0.22]} />
+          <meshStandardMaterial color="#2C1E0F" roughness={0.85} />
+        </mesh>
+      </group>
+
+      {/* Right window */}
+      <group position={[2.8, 2.0, -4.45]}>
+        {/* Window frame */}
+        <mesh>
+          <boxGeometry args={[2.0, 2.5, 0.06]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Glass — dark reflective surface */}
+        <mesh position={[0, 0, 0.035]}>
+          <planeGeometry args={[1.7, 2.15]} />
+          <meshStandardMaterial
+            color="#030303"
+            roughness={0.05}
+            metalness={0.9}
+            envMapIntensity={0.4}
+          />
+        </mesh>
+        {/* Subtle frame inner edge highlight */}
+        <mesh position={[0, 0, 0.032]}>
+          <boxGeometry args={[1.8, 2.25, 0.003]} />
+          <meshStandardMaterial
+            color="#F5A623"
+            emissive="#F5A623"
+            emissiveIntensity={0.03}
+            transparent
+            opacity={0.15}
+          />
+        </mesh>
+        {/* Horizontal divider */}
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[1.8, 0.04, 0.02]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Vertical divider */}
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[0.04, 2.3, 0.02]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
+        </mesh>
+        {/* Window sill */}
+        <mesh position={[0, -1.3, 0.12]}>
+          <boxGeometry args={[2.2, 0.06, 0.22]} />
+          <meshStandardMaterial color="#2C1E0F" roughness={0.85} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
 
 /* ── Main exported scene ── */
 export default function MonitorScene({
@@ -475,6 +605,9 @@ export default function MonitorScene({
         groundColor="#3D2B14"
         intensity={0.5}
       />
+
+      {/* ── Room enclosure ── */}
+      <Room />
       {/* Contact shadows on ground */}
       <Suspense fallback={null}>
         <ContactShadows
