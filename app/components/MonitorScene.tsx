@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
+import { Float, useGLTF, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ── Animated canvas texture (faux OS screen) ── */
@@ -107,15 +107,15 @@ function useScreenTexture() {
   return { texture: textureRef, update };
 }
 
-/* ── Floating particles ── */
+/* ── Floating particles (warm dust motes) ── */
 function FloatingParticles() {
-  const count = 80;
+  const count = 120;
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 14;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 10;
+      arr[i * 3] = (Math.random() - 0.5) * 16;
+      arr[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 12;
     }
     return arr;
   }, []);
@@ -123,8 +123,8 @@ function FloatingParticles() {
   const ref = useRef<THREE.Points>(null);
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.getElapsedTime() * 0.03;
-      ref.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.02) * 0.1;
+      ref.current.rotation.y = state.clock.getElapsedTime() * 0.025;
+      ref.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.015) * 0.08;
     }
   });
 
@@ -134,13 +134,61 @@ function FloatingParticles() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
-        color="#F5A623"
+        size={0.04}
+        color="#FFD27D"
         transparent
-        opacity={0.45}
+        opacity={0.55}
         sizeAttenuation
       />
     </points>
+  );
+}
+
+/* ── GLTF Keyboard model ── */
+function KeyboardModel() {
+  const { scene } = useGLTF('/asset/3d/keyboard.glb');
+
+  useEffect(() => {
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+  }, [scene]);
+
+  return (
+    <primitive
+      object={scene}
+      position={[0, -1.52, 0.85]}
+      scale={[0.6, 0.6, 0.6]}
+      rotation={[0, 0, 0]}
+    />
+  );
+}
+
+/* ── GLTF Clock model ── */
+function ClockModel() {
+  const { scene } = useGLTF('/asset/3d/clock.glb');
+
+  useEffect(() => {
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+  }, [scene]);
+
+  return (
+    <primitive
+      object={scene}
+      position={[-1.8, -1.3, -0.1]}
+      scale={[0.5, 0.5, 0.5]}
+      rotation={[0, 0.3, 0]}
+    />
   );
 }
 
@@ -164,15 +212,15 @@ function ProceduralMonitor({ screenTexture }: { screenTexture: React.RefObject<T
         )}
       </mesh>
 
-      {/* Screen edge glow */}
+      {/* Screen edge glow — brighter */}
       <mesh position={[0, 0, 0.063]}>
-        <boxGeometry args={[3.0, 1.8, 0.005]} />
+        <boxGeometry args={[3.05, 1.85, 0.005]} />
         <meshStandardMaterial
           color="#F5A623"
           emissive="#F5A623"
-          emissiveIntensity={0.08}
+          emissiveIntensity={0.15}
           transparent
-          opacity={0.3}
+          opacity={0.35}
         />
       </mesh>
 
@@ -217,21 +265,10 @@ function Desk() {
   );
 }
 
-/* ── Desk accessories ── */
+/* ── Desk accessories (procedural items alongside GLTF models) ── */
 function DeskAccessories() {
   return (
     <group>
-      {/* Keyboard */}
-      <mesh position={[0, -1.5, 0.9]} castShadow>
-        <boxGeometry args={[1.2, 0.04, 0.4]} />
-        <meshStandardMaterial color="#1A1208" roughness={0.7} metalness={0.3} />
-      </mesh>
-      {/* Key details (subtle rows) */}
-      <mesh position={[0, -1.47, 0.9]}>
-        <boxGeometry args={[1.1, 0.01, 0.32]} />
-        <meshStandardMaterial color="#2C1E0F" roughness={0.6} />
-      </mesh>
-
       {/* Mouse */}
       <group position={[1.0, -1.5, 0.9]}>
         <mesh castShadow>
@@ -240,9 +277,9 @@ function DeskAccessories() {
         </mesh>
       </group>
 
-      {/* Coffee cup */}
+      {/* Coffee cup with steam glow */}
       <group position={[-1.6, -1.42, 0.6]}>
-        <mesh>
+        <mesh castShadow>
           <cylinderGeometry args={[0.1, 0.08, 0.2, 16]} />
           <meshStandardMaterial color="#F5EDD6" roughness={0.6} />
         </mesh>
@@ -254,11 +291,13 @@ function DeskAccessories() {
           <torusGeometry args={[0.05, 0.015, 8, 16, Math.PI]} />
           <meshStandardMaterial color="#F5EDD6" roughness={0.6} />
         </mesh>
+        {/* Warm glow from coffee */}
+        <pointLight position={[0, 0.15, 0]} intensity={0.5} color="#FFD27D" distance={1.5} decay={2} />
       </group>
 
       {/* Books stack */}
       <group position={[2.0, -1.38, 0.4]}>
-        {['#2D4A3E', '#F5A623', '#3D2B14'].map((c, i) => (
+        {['#2D4A3E', '#F5A623', '#3D2B14', '#8B5E3C'].map((c, i) => (
           <mesh key={i} position={[0, i * 0.08, 0]} castShadow>
             <boxGeometry args={[0.35, 0.06, 0.5]} />
             <meshStandardMaterial color={c} roughness={0.85} />
@@ -268,7 +307,7 @@ function DeskAccessories() {
 
       {/* Small plant */}
       <group position={[-2.0, -1.4, 0.2]}>
-        <mesh>
+        <mesh castShadow>
           <cylinderGeometry args={[0.1, 0.08, 0.16, 8]} />
           <meshStandardMaterial color="#3D2B14" roughness={0.9} />
         </mesh>
@@ -278,9 +317,9 @@ function DeskAccessories() {
         </mesh>
       </group>
 
-      {/* Desk lamp */}
-      <group position={[1.8, -1.1, -0.2]}>
-        <mesh>
+      {/* Desk lamp — brighter, warmer */}
+      <group position={[1.9, -1.1, -0.3]}>
+        <mesh castShadow>
           <cylinderGeometry args={[0.08, 0.1, 0.04, 16]} />
           <meshStandardMaterial color="#2C1E0F" roughness={0.8} />
         </mesh>
@@ -293,13 +332,66 @@ function DeskAccessories() {
           <meshStandardMaterial
             color="#F5A623"
             emissive="#F5A623"
-            emissiveIntensity={0.8}
+            emissiveIntensity={1.2}
             side={THREE.DoubleSide}
             roughness={0.4}
           />
         </mesh>
-        {/* Lamp glow light */}
-        <pointLight position={[0.06, 0.48, 0]} intensity={2} color="#FFD27D" distance={3} decay={2} />
+        {/* Bright lamp spotlight — key warm light source */}
+        <spotLight
+          position={[0.06, 0.45, 0]}
+          target-position={[0.5, -1.6, 0.5]}
+          intensity={8}
+          color="#FFD27D"
+          angle={0.7}
+          penumbra={0.6}
+          distance={5}
+          decay={2}
+          castShadow
+        />
+        <pointLight position={[0.06, 0.48, 0]} intensity={4} color="#FFD27D" distance={4} decay={2} />
+      </group>
+
+      {/* Pencil holder */}
+      <group position={[1.4, -1.4, 0.2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 0.18, 8]} />
+          <meshStandardMaterial color="#2D4A3E" roughness={0.8} />
+        </mesh>
+        {/* Pencils */}
+        {[0, 0.04, -0.03].map((x, i) => (
+          <mesh key={i} position={[x, 0.14, i * 0.02 - 0.01]}>
+            <cylinderGeometry args={[0.008, 0.008, 0.16, 6]} />
+            <meshStandardMaterial color={['#F5A623', '#E8921C', '#3D2B14'][i]} roughness={0.7} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Sticky notes */}
+      <group position={[-1.2, -1.53, 0.5]}>
+        {['#F5A623', '#7AC4A8', '#FFD27D'].map((c, i) => (
+          <mesh key={i} position={[i * 0.22, 0, 0]} castShadow>
+            <boxGeometry args={[0.2, 0.005, 0.2]} />
+            <meshStandardMaterial color={c} roughness={0.9} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Headphones on desk */}
+      <group position={[-2.1, -1.46, 0.7]}>
+        <mesh rotation={[Math.PI / 2, 0, 0.3]}>
+          <torusGeometry args={[0.12, 0.02, 8, 24, Math.PI]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.5} metalness={0.5} />
+        </mesh>
+        {/* Ear cups */}
+        <mesh position={[-0.1, 0, 0.1]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.03, 12]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.6} metalness={0.3} />
+        </mesh>
+        <mesh position={[0.1, 0, 0.1]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.03, 12]} />
+          <meshStandardMaterial color="#1A1208" roughness={0.6} metalness={0.3} />
+        </mesh>
       </group>
     </group>
   );
@@ -346,26 +438,72 @@ export default function MonitorScene({
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.25} color="#F5EDD6" />
-      <pointLight position={[-3, 4, 3]} intensity={3} color="#F5A623" distance={15} decay={2} castShadow />
-      <pointLight position={[4, 2, 4]} intensity={1.5} color="#FFD27D" distance={10} decay={2} />
-      <pointLight position={[0, 6, 0]} intensity={0.6} color="#2D4A3E" distance={12} decay={2} />
 
-      {/* Monitor glow (casts light onto desk) */}
+      {/* ── Warm Ambient Lighting (significantly boosted) ── */}
+      <ambientLight intensity={0.8} color="#FFD27D" />
+
+      {/* Key light — warm overhead from left */}
+      <pointLight position={[-3, 5, 4]} intensity={6} color="#F5A623" distance={20} decay={2} castShadow />
+
+      {/* Fill light — softer warm from right */}
+      <pointLight position={[4, 3, 5]} intensity={4} color="#FFD27D" distance={15} decay={2} />
+
+      {/* Rim light — subtle cool accent from above-behind */}
+      <pointLight position={[0, 6, -3]} intensity={2} color="#7AC4A8" distance={15} decay={2} />
+
+      {/* Low warm fill — illuminates the desk from below-front */}
+      <pointLight position={[0, -0.5, 4]} intensity={2} color="#F5A623" distance={10} decay={2} />
+
+      {/* Side warm fills */}
+      <pointLight position={[-4, 1, 1]} intensity={2} color="#FFD27D" distance={8} decay={2} />
+      <pointLight position={[4, 1, 1]} intensity={2} color="#FFD27D" distance={8} decay={2} />
+
+      {/* Monitor screen glow — casts warm light onto desk */}
       <spotLight
-        position={[0, 0.4, 1]}
+        position={[0, 0.4, 1.5]}
         target-position={[0, -1.5, 1]}
-        intensity={1.5}
+        intensity={5}
         color="#F5A623"
-        angle={0.8}
+        angle={0.9}
         penumbra={0.8}
+        distance={6}
+        decay={2}
       />
+
+      {/* Hemisphere light for overall warm fill */}
+      <hemisphereLight
+        color="#FFD27D"
+        groundColor="#3D2B14"
+        intensity={0.6}
+      />
+
+      {/* Contact shadows on ground */}
+      <Suspense fallback={null}>
+        <ContactShadows
+          position={[0, -2.15, 0]}
+          opacity={0.4}
+          blur={2}
+          scale={12}
+          far={4}
+          resolution={512}
+          color="#000000"
+        />
+      </Suspense>
 
       <Float speed={0.8} rotationIntensity={0.02} floatIntensity={0.05}>
         <ProceduralMonitor screenTexture={screenTexture} />
         <Desk />
         <DeskAccessories />
+
+        {/* GLTF Keyboard */}
+        <Suspense fallback={null}>
+          <KeyboardModel />
+        </Suspense>
+
+        {/* GLTF Clock */}
+        <Suspense fallback={null}>
+          <ClockModel />
+        </Suspense>
       </Float>
 
       <FloatingParticles />
@@ -374,3 +512,7 @@ export default function MonitorScene({
     </>
   );
 }
+
+// Preload GLTF assets
+useGLTF.preload('/asset/3d/keyboard.glb');
+useGLTF.preload('/asset/3d/clock.glb');
