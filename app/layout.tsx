@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "./components/Navbar";
 
 export const metadata: Metadata = {
   title: "StudyNest — Your Digital Sanctuary",
@@ -20,7 +19,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="noise-overlay">
-        <Navbar />
         {children}
       </body>
     </html>
