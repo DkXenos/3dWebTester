@@ -171,16 +171,22 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
             {/* Welcome message */}
             <AnimatePresence>
               {showWelcome && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
+                  }}
+                >
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -10 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
                     textAlign: 'center',
                   }}
                 >
@@ -202,21 +208,27 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
                     Your digital sanctuary is ready
                   </p>
                 </motion.div>
+                </div>
               )}
             </AnimatePresence>
 
             {/* Center area — after welcome fades */}
             <AnimatePresence>
               {!showWelcome && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                   style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
                     textAlign: 'center',
                   }}
                 >
@@ -263,6 +275,7 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
                     </span>
                   </a>
                 </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
