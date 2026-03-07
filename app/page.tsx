@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const HeroPortal = dynamic(() => import('./components/HeroPortal'), {
+const VideoHero = dynamic(() => import('./components/VideoHero'), {
   ssr: false,
   loading: () => (
     <div
@@ -45,7 +45,7 @@ const HeroPortal = dynamic(() => import('./components/HeroPortal'), {
 export default function Home() {
   return (
     <main style={{ background: '#000000' }}>
-      <HeroPortal />
+      <VideoHero />
     </main>
   );
 }
