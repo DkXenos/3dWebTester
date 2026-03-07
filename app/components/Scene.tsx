@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useGLTF, Environment, ContactShadows } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import { Suspense } from 'react';
 import * as THREE from 'three';
 
@@ -20,10 +20,6 @@ function ClassroomModel() {
     scene.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
-
-      // Shadows
-      mesh.castShadow    = true;
-      mesh.receiveShadow = true;
 
       // Fix colour space
       const rawMats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -94,7 +90,7 @@ function ClassroomModel() {
         clone.opacity         = 0.08;
         clone.roughness       = 0.0;
         clone.metalness       = 0.05;
-        clone.envMapIntensity = 2.5;
+        clone.envMapIntensity = 0.0;
         clone.color.set('#c8dff0');
         clone.depthWrite      = false;
         clone.needsUpdate     = true;
@@ -115,27 +111,11 @@ function ClassroomModel() {
 export default function Scene() {
   return (
     <>
-      <ambientLight intensity={0.15} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 8, 5]} intensity={0.8} />
 
       <Suspense fallback={null}>
-        <Environment
-          files="/asset/exr/mainbg.exr"
-          background
-          blur={0.5}
-          environmentIntensity={0.6}
-        />
-
         <ClassroomModel />
-
-        <ContactShadows
-          position={[0, 0.01, 0]}
-          opacity={0.55}
-          blur={2.5}
-          scale={24}
-          far={6}
-          resolution={512}
-          color="#000000"
-        />
       </Suspense>
     </>
   );
