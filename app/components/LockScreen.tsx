@@ -41,12 +41,17 @@ function AvatarLetter({ letter, size = 88 }: { letter: string; size?: number }) 
 }
 
 export default function LockScreen({ onUnlock }: LockScreenProps) {
-  const [step, setStep] = useState<'username' | 'password'>('username');
+  const [step, setStep] = useState<'username' | 'password' | 'register'>('username');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [shakeKey, setShakeKey] = useState(0);
   const [unlocking, setUnlocking] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Register form state
+  const [regName, setRegName] = useState('');
+  const [regUsername, setRegUsername] = useState('');
+  const [regPassword, setRegPassword] = useState('');
 
   /* auto-focus the password field when transitioning */
   useEffect(() => {
@@ -69,6 +74,13 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
       setTimeout(onUnlock, 800);
     } else {
       setShakeKey(k => k + 1);
+    }
+  };
+
+  const handleRegister = () => {
+    if (regName && regUsername && regPassword) {
+      setUnlocking(true);
+      setTimeout(onUnlock, 800);
     }
   };
 
@@ -223,6 +235,20 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
                     />
                   </svg>
                 </motion.button>
+
+                {/* Create Account link */}
+                <button
+                  onClick={() => setStep('register')}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: '0.68rem', color: 'rgba(245,237,214,0.35)',
+                    transition: 'color 0.2s', marginTop: 4,
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#F5A623'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(245,237,214,0.35)'; }}
+                >
+                  Create Account
+                </button>
               </motion.div>
             )}
 
@@ -305,6 +331,84 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
                 <p style={{ fontSize: '0.58rem', color: 'rgba(245,237,214,0.2)', marginTop: 2 }}>
                   Hint: any password works for this demo
                 </p>
+              </motion.div>
+            )}
+
+            {/* ── REGISTER STEP ── */}
+            {step === 'register' && (
+              <motion.div
+                key="register-step"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, width: 300 }}
+              >
+                <div style={{
+                  fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 700,
+                  color: '#F5EDD6', marginBottom: 4,
+                }}>
+                  Create Account
+                </div>
+
+                <input
+                  placeholder="Full Name"
+                  value={regName}
+                  onChange={e => setRegName(e.target.value)}
+                  style={inputStyle}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.4)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.15)'; }}
+                />
+                <input
+                  placeholder="Username"
+                  value={regUsername}
+                  onChange={e => setRegUsername(e.target.value)}
+                  style={inputStyle}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.4)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.15)'; }}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={regPassword}
+                  onChange={e => setRegPassword(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleRegister(); }}
+                  style={{ ...inputStyle, letterSpacing: '0.2em' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.4)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.15)'; }}
+                />
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleRegister}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 10,
+                    background: regName && regUsername && regPassword
+                      ? 'linear-gradient(135deg, #F5A623, #E8921C)'
+                      : 'rgba(245,166,35,0.15)',
+                    border: 'none',
+                    color: regName && regUsername && regPassword ? '#1A1208' : 'rgba(245,237,214,0.3)',
+                    fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                    boxShadow: regName && regUsername && regPassword ? '0 4px 20px rgba(245,166,35,0.2)' : 'none',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  Create Account
+                </motion.button>
+
+                <button
+                  onClick={() => setStep('username')}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: '0.68rem', color: 'rgba(245,237,214,0.35)',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#F5A623'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(245,237,214,0.35)'; }}
+                >
+                  ← Back to Login
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
