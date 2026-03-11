@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import NotesAIWindow from './NotesAIWindow';
 import AICompanionWindow from './AICompanionWindow';
 import StudyModeWindow from './StudyModeWindow';
@@ -26,10 +26,117 @@ const dockApps = [
   { id: 'rewards',     name: 'Daily Rewards', icon: '🎁' },
 ];
 
+/* ── Dropdown item types ── */
+type MenuItem = { label: string; icon: string; shortcut?: string; action?: string; divider?: false }
+  | { divider: true };
+
+const fileMenu: MenuItem[] = [
+  { label: 'New Note', icon: '📝', shortcut: '⌘N', action: 'notes' },
+  { label: 'Upload File to AI', icon: '📁', shortcut: '⌘U', action: 'notes' },
+  { label: 'Import Audio / Video', icon: '🎙️', shortcut: '⌘I', action: 'notes' },
+  { divider: true },
+  { label: 'Open AI Companion', icon: '🤖', shortcut: '⌘A', action: 'ai' },
+  { label: 'Start Study Session', icon: '⏱️', shortcut: '⌘S', action: 'study' },
+  { divider: true },
+  { label: 'Open GPA Calculator', icon: '🎓', action: 'gpa' },
+  { label: 'Open Forum', icon: '💬', action: 'forum' },
+  { divider: true },
+  { label: 'Export Notes as PDF', icon: '📄', action: 'toast:Exporting notes...' },
+  { label: 'Print', icon: '🖨️', shortcut: '⌘P', action: 'toast:Print dialog opened' },
+];
+
+const editMenu: MenuItem[] = [
+  { label: 'Undo', icon: '↩️', shortcut: '⌘Z', action: 'toast:Undo' },
+  { label: 'Redo', icon: '↪️', shortcut: '⌘⇧Z', action: 'toast:Redo' },
+  { divider: true },
+  { label: 'Cut', icon: '✂️', shortcut: '⌘X', action: 'toast:Cut to clipboard' },
+  { label: 'Copy', icon: '📋', shortcut: '⌘C', action: 'toast:Copied' },
+  { label: 'Paste', icon: '📌', shortcut: '⌘V', action: 'toast:Pasted' },
+  { divider: true },
+  { label: 'AI Personality Settings', icon: '🎭', action: 'ai' },
+  { label: 'Study Timer Preferences', icon: '⚙️', action: 'study' },
+  { divider: true },
+  { label: 'Clear All Notes', icon: '🗑️', action: 'toast:Notes cleared' },
+];
+
+const viewMenu: MenuItem[] = [
+  { label: 'Show All Windows', icon: '🪟', action: 'openAll' },
+  { label: 'Close All Windows', icon: '✕', shortcut: '⌘⇧W', action: 'closeAll' },
+  { divider: true },
+  { label: 'Leaderboard', icon: '🏆', shortcut: '⌘L', action: 'leaderboard' },
+  { label: 'Daily Rewards', icon: '🎁', shortcut: '⌘D', action: 'rewards' },
+  { label: 'Quiz Mode', icon: '📊', shortcut: '⌘Q', action: 'quiz' },
+  { divider: true },
+  { label: 'Toggle Full Screen', icon: '⛶', shortcut: '⌘F', action: 'toast:Fullscreen toggled' },
+  { label: 'Zoom In', icon: '🔍', shortcut: '⌘+', action: 'toast:Zoomed in' },
+  { label: 'Zoom Out', icon: '🔎', shortcut: '⌘-', action: 'toast:Zoomed out' },
+];
+
+const MENUS = { File: fileMenu, Edit: editMenu, View: viewMenu } as const;
+type MenuKey = keyof typeof MENUS;
+
+/* ── Dropdown component ── */
+function MenuDropdown({ items, onAction, onClose }: {
+  items: MenuItem[];
+  onAction: (action: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
+      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+      exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+      transition={{ duration: 0.12 }}
+      style={{
+        position: 'absolute', top: 32, left: 0,
+        minWidth: 220, padding: '4px 0',
+        background: 'rgba(18,13,6,0.96)',
+        backdropFilter: 'blur(28px) saturate(1.6)',
+        WebkitBackdropFilter: 'blur(28px) saturate(1.6)',
+        border: '1px solid rgba(245,166,35,0.18)',
+        borderRadius: 10,
+        boxShadow: '0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,166,35,0.06)',
+        zIndex: 999,
+        transformOrigin: 'top left',
+      }}
+      onMouseLeave={onClose}
+    >
+      {items.map((item, i) => {
+        if ('divider' in item && item.divider) {
+          return <div key={`d-${i}`} style={{ height: 1, background: 'rgba(245,166,35,0.1)', margin: '4px 8px' }} />;
+        }
+        const m = item as Exclude<MenuItem, { divider: true }>;
+        return (
+          <button
+            key={m.label}
+            onClick={() => { if (m.action) onAction(m.action); onClose(); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '6px 12px', background: 'none', border: 'none',
+              cursor: 'pointer', fontSize: '0.72rem', color: 'var(--cream)',
+              transition: 'background 0.1s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245,166,35,0.12)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+          >
+            <span style={{ width: 18, textAlign: 'center', fontSize: '0.75rem' }}>{m.icon}</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>{m.label}</span>
+            {m.shortcut && (
+              <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.03em' }}>{m.shortcut}</span>
+            )}
+          </button>
+        );
+      })}
+    </motion.div>
+  );
+}
+
 export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
   const [time, setTime] = useState('');
   const [showWelcome, setShowWelcome] = useState(true);
   const [openWindows, setOpenWindows] = useState<Set<string>>(new Set());
+  const [activeMenu, setActiveMenu] = useState<MenuKey | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const toggleWindow = (id: string) => {
     setOpenWindows((prev) => {
@@ -38,6 +145,20 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
       return next;
     });
   };
+
+  const handleMenuAction = useCallback((action: string) => {
+    if (action.startsWith('toast:')) {
+      setToast(action.slice(6));
+      setTimeout(() => setToast(null), 2000);
+    } else if (action === 'openAll') {
+      setOpenWindows(new Set(dockApps.map(a => a.id)));
+    } else if (action === 'closeAll') {
+      setOpenWindows(new Set());
+    } else {
+      // Open the app window
+      setOpenWindows(prev => new Set(prev).add(action));
+    }
+  }, []);
 
   useEffect(() => {
     const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
@@ -65,6 +186,7 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
             display: 'flex', flexDirection: 'column',
             fontFamily: "'Inter', system-ui, sans-serif", overflow: 'hidden',
           }}
+          onClick={() => setActiveMenu(null)}
         >
           {/* Wallpaper */}
           <div style={{
@@ -77,6 +199,32 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
             `,
             zIndex: -1,
           }} />
+
+          {/* ── Toast notification ── */}
+          <AnimatePresence>
+            {toast && (
+              <motion.div
+                key="toast"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.25 }}
+                style={{
+                  position: 'fixed', top: 44, left: '50%', transform: 'translateX(-50%)',
+                  padding: '6px 18px', borderRadius: 8,
+                  background: 'rgba(14,10,5,0.92)',
+                  border: '1px solid rgba(245,166,35,0.25)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  fontSize: '0.7rem', color: '#F5A623', fontWeight: 600,
+                  zIndex: 9999,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                }}
+              >
+                {toast}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── Top Menu Bar ── */}
           <motion.div
@@ -92,14 +240,40 @@ export default function DesktopOverlay({ visible }: DesktopOverlayProps) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '0 16px', fontSize: '0.75rem', fontWeight: 600,
               color: 'var(--cream)', flexShrink: 0,
+              position: 'relative', zIndex: 100,
             }}
           >
-            {/* Left: brand + menu */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <span style={{ color: '#F5A623', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>✦ StudyNest</span>
-              <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>File</span>
-              <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Edit</span>
-              <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>View</span>
+            {/* Left: brand + menus */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <span style={{ color: '#F5A623', fontFamily: 'Outfit, sans-serif', fontWeight: 700, marginRight: 14 }}>✦ StudyNest</span>
+              {(Object.keys(MENUS) as MenuKey[]).map((menuKey) => (
+                <div key={menuKey} style={{ position: 'relative' }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveMenu(prev => prev === menuKey ? null : menuKey); }}
+                    onMouseEnter={() => { if (activeMenu !== null) setActiveMenu(menuKey); }}
+                    style={{
+                      background: activeMenu === menuKey ? 'rgba(245,166,35,0.15)' : 'none',
+                      border: 'none', borderRadius: 5,
+                      padding: '3px 10px', cursor: 'pointer',
+                      color: activeMenu === menuKey ? '#F5A623' : 'var(--text-muted)',
+                      fontWeight: activeMenu === menuKey ? 600 : 400,
+                      fontSize: '0.75rem',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {menuKey}
+                  </button>
+                  <AnimatePresence>
+                    {activeMenu === menuKey && (
+                      <MenuDropdown
+                        items={MENUS[menuKey]}
+                        onAction={handleMenuAction}
+                        onClose={() => setActiveMenu(null)}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
             </div>
 
             {/* Center: HUD stats */}
