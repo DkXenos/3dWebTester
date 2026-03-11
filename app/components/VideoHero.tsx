@@ -112,7 +112,7 @@ export default function VideoHero() {
                 {/* The video */}
                 <video
                   ref={videoRef}
-                  src="/asset/video/desktop.mp4"
+                  src="/asset/video/video2.mp4"
                   muted
                   playsInline
                   preload="auto"
