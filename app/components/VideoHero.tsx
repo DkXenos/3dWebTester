@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { motion, AnimatePresence } from 'framer-motion';
 import DesktopOverlay from './DesktopOverlay';
+import LockScreen from './LockScreen';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,6 +14,7 @@ export default function VideoHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isInsideOS, setIsInsideOS] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [fadeOpacity, setFadeOpacity] = useState(0);
 
@@ -222,8 +224,13 @@ export default function VideoHero() {
         </AnimatePresence>
       </div>
 
+      {/* ── Lock Screen ── */}
+      {isInsideOS && !isUnlocked && (
+        <LockScreen onUnlock={() => setIsUnlocked(true)} />
+      )}
+
       {/* ── Desktop Overlay (2D OS) ── */}
-      <DesktopOverlay visible={isInsideOS} />
+      <DesktopOverlay visible={isInsideOS && isUnlocked} />
     </>
   );
 }
